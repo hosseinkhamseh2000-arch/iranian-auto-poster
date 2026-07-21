@@ -1,0 +1,41 @@
+name: Telegram Auto Poster
+
+on:
+  schedule:
+    # ساعت‌های 09:00، 13:00، 17:00 و 21:00 به وقت ایران
+    - cron: "30 5,9,13,17 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: دریافت فایل‌های پروژه
+        uses: actions/checkout@v4
+
+      - name: نصب پایتون
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: نصب کتابخانه‌ها
+        run: pip install requests
+
+      - name: انتشار یک پست
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHANNEL_ID: "@kp_iranian"
+        run: python post_once.py
+
+      - name: ذخیره وضعیت عکس‌ها
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          git diff --cached --quiet || git commit -m "Update posting state"
+          git push
